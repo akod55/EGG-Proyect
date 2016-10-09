@@ -4,7 +4,7 @@ import datetime
 from matplotlib.pyplot import locator_params
 
 # Data files in a directory (next(os.walk("path"))[2])
-all_data_file = next(os.walk("C:\Users\Usuario\Documents\Python\Proyect\DataBaseTXT"))[2]
+all_data_file = next(os.walk("C:\Users\Usuario\Documents\Python\EGG-Proyect\DataBaseTXT"))[2]
 #globlas
 heads = ['Sleep Stage', 'Time [hh:mm:ss]', 'Event', 'Duration[s]', 'Location']
 # stages
@@ -17,7 +17,7 @@ global data_complete
 def get_all_data():
     all_data = {}
     for i in all_data_file:
-        tmp = open("C:\Users\Usuario\Documents\Python\Proyect\DataBaseTXT/" + i).readlines()
+        tmp = open("C:\Users\Usuario\Documents\Python\EGG-Proyect\DataBaseTXT/" + i).readlines()
         for line in xrange(len(tmp)):
             if "Sleep Stage" in tmp[line]:
                 all_data[i] = tmp[line:]
@@ -88,11 +88,9 @@ def dict_of_features(clear_data):
 
 def read_DB():
     global data_complete
-    print "se que sufres"
     # Saving each file in a dict. key =  nameFile, value = alldata
     clear_dat = clear_data_into_list(get_all_data())
     data_complete = dict_of_features(clear_dat)
-    print "me mata "
 # Extract the waves of stage
 def extract_waves_stage(name_file):
     # posible locations of the diode
