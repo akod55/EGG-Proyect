@@ -1,11 +1,11 @@
 import sys
-from PyQt4.QtCore import *
 from PyQt4 import QtGui
 from PyQt4.QtGui import *
 import threading
 from read_files import read_DB
 from read_files import plot_waves_comparison
 from read_files import all_data_file
+
 class Window(QtGui.QMainWindow):
     subject1=""
     subject2=""
