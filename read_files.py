@@ -2,6 +2,10 @@ import os
 import matplotlib.pylab as plt
 import datetime
 from matplotlib.pyplot import locator_params
+import numpy as np
+
+# LOAD DATA COMPLETE
+data_complete =np.load('data_complete_dict.npy').item()
 
 # Data files in a directory (next(os.walk("path"))[2])
 all_data_file = next(os.walk("/home/japrietov/Universidad/TeoriaInformacion/EEG_project/EGG-Proyect/DataBaseTXT"))[2]
@@ -13,8 +17,6 @@ stages = ['S3', 'S2', 'S1', 'S4', 'MT', 'W', 'REM']
 # events
 events = ['SLEEP-S3', 'SLEEP-S2', 'SLEEP-S1', 'SLEEP-S0', 'SLEEP-S4', 'SLEEP-REM', 'SLEEP-MT', 'MCAP-A1', 'MCAP-A2', 'MCAP-A3']
 
-global data_complete
-
 def get_all_data():
     all_data = {}
     for i in all_data_file:
@@ -25,7 +27,6 @@ def get_all_data():
                 all_data[i] = tmp[line:]
                 break
     return all_data
-
 
 # Clear data, split the data by tabs
 def clear_data_into_list(all_data):
@@ -94,7 +95,9 @@ def read_DB():
     clear_dat = clear_data_into_list(get_all_data())
     data_complete = dict_of_features(clear_dat)
 # Extract the waves of stage
+
 def extract_waves_stage(name_file):
+
     # posible locations of the diode
     posible_locations = list(set(data_complete[name_file]['Location']))
 
@@ -345,24 +348,81 @@ def plot_waves_comparison(name_file, name_file_2, name_file_3 ):
     plt.tight_layout()
     plt.show()
 
+"""
 clear_dat = clear_data_into_list(get_all_data())
 data_complete = dict_of_features(clear_dat)
+
+
+import numpy as np
+np.save('data_complete_dict.npy',data_complete)
 
 #set_location = ['EOG', 'O2-A1', 'EEG-F7-T3', 'EOG-Left', 'EEG-O2-A1', 'EEG-P3-O1', 'C4-A1', 'EEG-P3-C4', 'EEG-C4-A1', 'EEG-P4-Fp1', 'EEG-T3-T5', 'EMG1-EMG2', 'ECG1-ECG2', 'C3-A2', 'LOC-A2', 'EEG-C4-P4', 'EEG-C3-A2', 'EEG-T4-Fp2', 'EOG-Left-A2', 'EEG-Fp2-F4', 'EEG-C3-O1', 'EOG-Right-A1', 'EEG-T4-T6', 'ROC-LOC', 'EEG-F4-C4', 'LOC-A1', 'ROC-A2', 'EEG-C3-P3', 'EEG-F3-C3', 'CHIN1', 'EEG-F3-A2', 'EEG-F2-F4', 'EEG-C4-F8', 'EEG-F8-O2', 'EEG-P4-O2', 'EEG-Fp1-F3', 'EEG-F3-P3', 'EEG-F1-F3', 'EKG-H-R', 'EEG-Fp2-C3', 'EEG-F8-T4', 'EEG-Fp1-T6']
 
 dict_location = {'EOG': 0, 'EEG-F8-O2': 0, 'O2-A1': 0, 'EEG-F7-T3': 0, 'EOG-Left': 0, 'EEG-O2-A1': 0, 'EEG-P3-O1': 0, 'C4-A1': 0, 'EEG-P3-C4': 0, 'EEG-C4-A1': 0, 'EEG-P4-Fp1': 0, 'EEG-T3-T5': 0, 'EMG1-EMG2': 0, 'ECG1-ECG2': 0, 'C3-A2': 0, 'LOC-A2': 0, 'EEG-C4-P4': 0, 'EEG-F4-C4': 0, 'EEG-T4-Fp2': 0, 'EOG-Left-A2': 0, 'EEG-Fp2-F4': 0, 'EEG-C3-O1': 0, 'EOG-Right-A1': 0, 'EEG-T4-T6': 0, 'ROC-LOC': 0, 'EEG-C3-A2': 0, 'LOC-A1': 0, 'ROC-A2': 0, 'EEG-F1-F3': 0, 'EEG-F3-C3': 0, 'CHIN1': 0, 'EEG-F3-A2': 0, 'EEG-F2-F4': 0, 'EEG-C4-F8': 0, 'EEG-C3-P3': 0, 'EEG-P4-O2': 0, 'EEG-Fp1-F3': 0, 'EEG-F3-P3': 0, 'EKG-H-R': 0, 'EEG-Fp2-C3': 0, 'EEG-F8-T4': 0, 'EEG-Fp1-T6': 0}
 
-"""
+
 for u in dict_location:
     for key in data_complete:
         if u in data_complete[key]['Location']:
             dict_location[u]+=1
-"""
-index_files = 0
-for key in data_complete:
-    if "ROC-LOC" in data_complete[key]['Location'] and "EEG-Fp2-F4" in data_complete[key]['Location']:
-        index_files += 1
 
-print dict_location
-print index_files
+import re
+
+
+
+
+dict_ROC_LOC = {}
+dict_EEG_Fp2_F4 = {}
+
+
+# labels = Narcolepsy, Insomnia, No pathology (controls), Sleep-disordered breathing, Nocturnal frontal lobe epilepsy, Periodic leg movements, REM behavior disorder
+labels_EEG = {'narco':0, 'ins':1, 'n':2, 'sdb':3, 'nfle':4, 'plm':5, 'rbd':6}
+
+for key in data_complete:
+    if "ROC-LOC" in data_complete[key]['Location']:
+        dict_ROC_LOC[key] = data_complete[key]
+    if "EEG-Fp2-F4" in data_complete[key]['Location']:
+        dict_EEG_Fp2_F4[key] = data_complete[key]
+
+    match = re.match(r"([a-z]+)([0-9]+)", key, re.I)
+    if match:
+        items = match.groups()
+
+
+################################################################
+# Vamos a hacer la clasificacion por los eventos del sueno
+################################################################
+
+# Refactor data ROC_LOC
+print len(dict_ROC_LOC.keys())
+for i in xrange(2166):
+    for key_ROC in dict_ROC_LOC:
+        #print extract_waves_stage(key_ROC)["ROC-LOC"][0]
+        pass
+
+
+
+matrix_to_classify_ROC = []
+
+posible_roc = []
+for key_ROC in dict_ROC_LOC:
+    match = re.match(r"([a-z]+)([0-9]+)", key_ROC, re.I)
+    label = -1
+    if match:
+        items = match.groups()
+        label = labels_EEG[items[0]]
+    print extract_waves_stage(key_ROC)["ROC-LOC"][0]
+
+print min(posible_roc)
+
+
+
+print extract_waves_stage('nfle24.txt')
+#print extract_waves_event('nfle24.txt')
+#print dict_EEG_Fp2_F4.keys()
+#print labels
+
+
 #plot_waves_comparison("nfle1.txt", "n10.txt", "rbd14.txt")
+
+"""
