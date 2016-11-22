@@ -1,5 +1,6 @@
 import numpy as np
 import re
+import scipy
 
 from read_files import extract_waves_stage
 
@@ -29,6 +30,64 @@ for key in data_complete:
 # Vamos a hacer la clasificacion por los eventos del sueno
 ################################################################
 
+min_data_text = 'plm6.txt'
+posible_roc = []
+"""
+TO FIND THE MIN_NUMBER OF TIME
+tmp_waves = extract_waves_stage(key_ROC)["ROC-LOC"][0]
+if i_add in tmp_waves:
+    index_check+=1
+
+tmp_min_waves = extract_waves_stage(min_data_text)["ROC-LOC"][0]
+
+print len(set(tmp_waves).intersection(tmp_waves))
+"""
+min_posible_number_time = 931
+
+"""
+TO FIND THE INDEX THAT TAKE MORE INFORMATION
+tmp__ = sorted(nsmallest(3, tmp_waves, key=lambda x: abs(x - min_posible_number_time)))[2]
+tmp_waves.index(tmp__), key_ROC
+"""
+min_possible_number_index = 436
+
+
+#from heapq import nsmallest
+
+# min(myList, key=lambda x:abs(x-myNumber))
+
+
+matrix_to_classify_ROC_data = []
+matrix_to_classify_ROC_label = []
+
+for key_ROC in dict_ROC_LOC:
+    match = re.match(r"([a-z]+)([0-9]+)", key_ROC, re.I)
+    label = -1
+    if match:
+        items = match.groups()
+        label = labels_EEG[items[0]]
+    tmp_time_ = extract_waves_stage(key_ROC)["ROC-LOC"][0][:437]
+    tmp_waves = extract_waves_stage(key_ROC)["ROC-LOC"][1][:437]
+
+    tuples_data = [(tmp_time_[ind], tmp_waves[ind]) for ind in xrange(len(tmp_waves))]
+    matrix_to_classify_ROC_data.append(label)
+    matrix_to_classify_ROC_label.append(label)
+
+
+from sklearn import svm
+X = matrix_to_classify_ROC_data
+y = matrix_to_classify_ROC_label
+clf = svm.SVC()
+clf.fit(X, y)
+
+
+
+
+for p in matrix_to_classify_ROC:
+    print p
+
+
+"""
 # Refactor data ROC_LOC
 print len(dict_ROC_LOC.keys())
 index_to_add = []
@@ -36,8 +95,13 @@ total_index = 0
 for i_add in xrange(1100):
     index_check = 0
     for key_ROC in dict_ROC_LOC:
-        if i_add in extract_waves_stage(key_ROC)["ROC-LOC"][0]:
+        tmp_waves = extract_waves_stage(key_ROC)["ROC-LOC"][0]
+        if i_add in tmp_waves:
             index_check+=1
+
+        tmp_min_waves = extract_waves_stage(min_data_text)["ROC-LOC"][0]
+
+        print len(set(tmp_waves).intersection(tmp_waves))
 
     print i_add, len(dict_ROC_LOC.keys()), index_check
     if index_check > 50:
@@ -45,7 +109,7 @@ for i_add in xrange(1100):
 
 print total_index
 
-
+"""
 
 """
 matrix_to_classify_ROC = []
@@ -64,6 +128,7 @@ for key_ROC in dict_ROC_LOC:
         min_dat = key_ROC
         min_ = len(extract_waves_stage(key_ROC)["ROC-LOC"][0])
 
+print min_dat
 print extract_waves_stage(min_dat)["ROC-LOC"][0]
 
 
