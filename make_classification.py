@@ -1,8 +1,8 @@
 import numpy as np
 import re
-import scipy
 
 from read_files import extract_waves_stage, extract_waves_event
+from transfotm_functions import fourier_transform
 
 data_complete =np.load('data_complete_dict.npy').item()
 
@@ -11,9 +11,11 @@ dict_location = {'EOG': 0, 'EEG-F8-O2': 0, 'O2-A1': 0, 'EEG-F7-T3': 0, 'EOG-Left
 dict_ROC_LOC = {}
 dict_EEG_Fp2_F4 = {}
 
+##################################################################
+# Extract data of ROC-LOC and EEG-Fp2-F4 position
+##################################################################
 # labels = Narcolepsy, Insomnia, No pathology (controls), Sleep-disordered breathing, Nocturnal frontal lobe epilepsy, Periodic leg movements, REM behavior disorder
 labels_EEG = {'narco':0, 'ins':1, 'n':2, 'nfle':3, 'plm':4, 'rbd':5, 'sdb':6}
-
 
 for key in data_complete:
     if "ROC-LOC" in data_complete[key]['Location']:
@@ -21,168 +23,136 @@ for key in data_complete:
     if "EEG-Fp2-F4" in data_complete[key]['Location']:
         dict_EEG_Fp2_F4[key] = data_complete[key]
 
-    match = re.match(r"([a-z]+)([0-9]+)", key, re.I)
-    if match:
-        items = match.groups()
 
-
-################################################################
-# Vamos a hacer la clasificacion por los eventos del sueno
-################################################################
-
-min_data_text = 'plm6.txt'
-posible_roc = []
-"""
-TO FIND THE MIN_NUMBER OF TIME
-tmp_waves = extract_waves_stage(key_ROC)["ROC-LOC"][0]
-if i_add in tmp_waves:
-    index_check+=1
-
-tmp_min_waves = extract_waves_stage(min_data_text)["ROC-LOC"][0]
-
-print len(set(tmp_waves).intersection(tmp_waves))
-"""
-min_posible_number_time = 931
-
-"""
-TO FIND THE INDEX THAT TAKE MORE INFORMATION
-tmp__ = sorted(nsmallest(3, tmp_waves, key=lambda x: abs(x - min_posible_number_time)))[2]
-tmp_waves.index(tmp__), key_ROC
-"""
-min_possible_number_index = 436
-
-
-#from heapq import nsmallest
-
-# min(myList, key=lambda x:abs(x-myNumber))
-
-
-matrix_to_classify_ROC_data = []
-matrix_to_classify_ROC_label = []
-
+########################################
+# Use kernel method to R^2 -> R
+########################################
 def Gaussian(x,z,sigma=1,axis=None):
     return np.exp((-(np.linalg.norm(x-z, axis=axis)**2))/(2*sigma**2))
 
 def kernel_dot(x,y):
     return x*y
 
-
-def kernel_dot_ex(x,y, exponent):
+def kernel_dot_ex(x,y, exponent=2):
     return (x*y+1)**exponent
 
 def kernel_triweight(x,z, axis=None):
     return (3.0/4.0)*(1.0-(np.linalg.norm(x - z, axis=axis) ** 2))
 
-for key_ROC in dict_ROC_LOC:
-    match = re.match(r"([a-z]+)([0-9]+)", key_ROC, re.I)
-    label = -1
-    if match:
-        items = match.groups()
-        label = labels_EEG[items[0]]
-    waves = extract_waves_stage(key_ROC)["ROC-LOC"]
-    time_waves = waves[0][:436]
-    events_waves = waves[1][:436]
+################################################################
+# Transform data using kernels and normalization
+################################################################
+def transform_data(kernel):
 
-    tuples_data = []
-    for (ind_i, indj) in zip(time_waves, events_waves):
-        tuples_data.append(Gaussian(ind_i, indj))
+    """
+    TO FIND THE INDEX THAT TAKE MORE INFORMATION
+    tmp__ = sorted(nsmallest(3, tmp_waves, key=lambda x: abs(x - min_posible_number_time)))[2]
+    tmp_waves.index(tmp__), key_ROC
+    """
+    min_possible_number_index = 436
 
-    matrix_to_classify_ROC_data.append(tuples_data)
-    matrix_to_classify_ROC_label.append(label)
-
-
-from sklearn import svm, cross_validation
-from sklearn.cross_validation import train_test_split
-from sklearn.ensemble import AdaBoostClassifier
-
-
-scores = list()
-
-y = np.array(matrix_to_classify_ROC_label, dtype=float)
-X = np.array(matrix_to_classify_ROC_data, dtype=float)
-
-print X
-print y.shape
-
-from sklearn import linear_model
-
-
-# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=0)
-alphas = np.arange(0.01, 2, 0.1)
-#for k in alphas:
-# clf = svm.SVC(C=0.001)
-clf = AdaBoostClassifier(n_estimators=100)
-
-    #for C in C_s:
-    #    clf.C = C
-this_scores = cross_validation.cross_val_score(clf, X, y, cv=10)
-
-print np.mean(this_scores)
-"""
-import matplotlib.pyplot as plt
-
-plt.figure(1, figsize=(10, 5))
-plt.clf()
-plt.plot(alphas, scores)
-#locs, labels = plt.yticks()
-#plt.yticks(locs, list(map(lambda x: "%g" % x, locs)))
-plt.ylabel('CV score')
-plt.xlabel('Parameter C')
-plt.show()
-
-
-
-# Refactor data ROC_LOC
-print len(dict_ROC_LOC.keys())
-index_to_add = []
-total_index = 0
-for i_add in xrange(1100):
-    index_check = 0
+    matrix_to_classify_ROC_data = []
+    matrix_to_classify_ROC_label = []
     for key_ROC in dict_ROC_LOC:
-        tmp_waves = extract_waves_stage(key_ROC)["ROC-LOC"][0]
-        if i_add in tmp_waves:
-            index_check+=1
+        match = re.match(r"([a-z]+)([0-9]+)", key_ROC, re.I)
+        label = -1
+        if match:
+            items = match.groups()
+            label = labels_EEG[items[0]]
+        waves = extract_waves_stage(key_ROC)["ROC-LOC"]
+        time_waves = waves[0][:min_possible_number_index]
+        events_waves = waves[1][:min_possible_number_index]
 
-        tmp_min_waves = extract_waves_stage(min_data_text)["ROC-LOC"][0]
+        tuples_data = []
+        for (ind_i, indj) in zip(time_waves, events_waves):
+            tuples_data.append(kernel(ind_i, indj))
 
-        print len(set(tmp_waves).intersection(tmp_waves))
+        matrix_to_classify_ROC_data.append(tuples_data)
+        matrix_to_classify_ROC_label.append(label)
 
-    print i_add, len(dict_ROC_LOC.keys()), index_check
-    if index_check > 50:
-        total_index += 1
+    normalizer = preprocessing.Normalizer().fit(matrix_to_classify_ROC_data)
 
-print total_index
-
-"""
-
-"""
-matrix_to_classify_ROC = []
-
-posible_roc = []
-
-min_ = 5000
-min_dat = ""
-for key_ROC in dict_ROC_LOC:
-    match = re.match(r"([a-z]+)([0-9]+)", key_ROC, re.I)
-    label = -1
-    if match:
-        items = match.groups()
-        label = labels_EEG[items[0]]
-    if len(extract_waves_stage(key_ROC)["ROC-LOC"][0]) < min_:
-        min_dat = key_ROC
-        min_ = len(extract_waves_stage(key_ROC)["ROC-LOC"][0])
-
-print min_dat
-print extract_waves_stage(min_dat)["ROC-LOC"][0]
+    return normalizer.transform(matrix_to_classify_ROC_data), matrix_to_classify_ROC_label, normalizer
 
 
+################################################################
+# Transform data using Fourier transform
+################################################################
+def clean_data():
+    tmp_dict_ROC_LOC = {}
+    min_wave = 2000
+    for roc in dict_ROC_LOC:
+        waves_ = extract_waves_stage(roc)["ROC-LOC"]
+        sss = np.arange(len(waves_[0]))
+        tmp_time = []
+        tmp_stages = []
+        for s in sss:
+            tmp_time.append(s)
+            if s in waves_[0]:
+                tmp_stages.append(waves_[1][s]+1)
+            else:
+                tmp_stages.append(0)
+        tmp_dict_ROC_LOC[roc] = [tmp_time, tmp_stages]
+        if len(waves_[0]) < min_wave:
+            min_wave = len(waves_[0])
+    return tmp_dict_ROC_LOC, min_wave
 
 
-print extract_waves_stage('nfle24.txt')
-#print extract_waves_event('nfle24.txt')
-#print dict_EEG_Fp2_F4.keys()
-#print labels
+from sklearn import preprocessing
+def transform_data_fourier():
+    matrix_to_classify_ROC_data = []
+    matrix_to_classify_ROC_label = []
+
+    dict_tmp_ROC_LOC, index_min = clean_data()
+
+    for tmp_key_ROC in dict_tmp_ROC_LOC:
+        match = re.match(r"([a-z]+)([0-9]+)", tmp_key_ROC, re.I)
+        label = -1
+        if match:
+            items = match.groups()
+            label = labels_EEG[items[0]]
+        fourier_transform_data = fourier_transform(dict_tmp_ROC_LOC[tmp_key_ROC][1][:index_min], 11)[1]
+
+        matrix_to_classify_ROC_data.append(fourier_transform_data)
+        matrix_to_classify_ROC_label.append(label)
+
+    # normalizer = preprocessing.Normalizer().fit(matrix_to_classify_ROC_data)
+
+    return matrix_to_classify_ROC_data, matrix_to_classify_ROC_label # , normalizer
 
 
-#plot_waves_comparison("nfle1.txt", "n10.txt", "rbd14.txt")
-"""
+#################################################################
+# Make classification using kernels and normalization.
+#################################################################
+from sklearn import svm, cross_validation
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+
+X, y, normalizer_function = transform_data(kernel_triweight)
+
+clf_kernel_AdaBoost = AdaBoostClassifier(n_estimators=50)
+clf_kernel_SVM = svm.SVC(kernel='linear', C=1)
+clf_kernel_Forest = RandomForestClassifier(n_estimators=50)
+
+# Score using crossvalidation
+print "Score using AdaBoost kernel: ", np.mean(cross_validation.cross_val_score(clf_kernel_AdaBoost, X, y, cv=10))
+print "Score using SVM kernel: ", np.mean(cross_validation.cross_val_score(clf_kernel_SVM, X, y, cv=10))
+print "Score using Random Forest kernel: ", np.mean(cross_validation.cross_val_score(clf_kernel_Forest, X, y, cv=10))
+print
+
+#################################################################
+# Make classification using kernels..
+#################################################################
+from sklearn import svm, cross_validation
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+
+X, y = transform_data_fourier()
+
+clf_fourier_AdaBoost = AdaBoostClassifier(n_estimators=50)
+clf_fourier_SVM = svm.SVC(kernel='linear', C=0.5)
+clf_fourier_Forest = RandomForestClassifier(n_estimators=50)
+
+print "Score using AdaBoost fourier: ", np.mean(cross_validation.cross_val_score(clf_fourier_AdaBoost, X, y, cv=10))
+print "Score using SVM fourier: ", np.mean(cross_validation.cross_val_score(clf_fourier_SVM, X, y, cv=10))
+print "Score using Random Forest fourier: ",np.mean(cross_validation.cross_val_score(clf_fourier_Forest, X, y, cv=10))
+
+
