@@ -5,7 +5,7 @@ from matplotlib.pyplot import locator_params
 import numpy as np
 
 # LOAD DATA COMPLETE
-data_complete =np.load('data_complete_dict.npy').item()
+data_complete = np.load('data_complete_dict.npy').item()
 
 # Data files in a directory (next(os.walk("path"))[2])
 all_data_file = next(os.walk("/home/japrietov/Universidad/TeoriaInformacion/EEG_project/EGG-Proyect/DataBaseTXT"))[2]
@@ -94,6 +94,7 @@ def read_DB():
     # Saving each file in a dict. key =  nameFile, value = alldata
     clear_dat = clear_data_into_list(get_all_data())
     data_complete = dict_of_features(clear_dat)
+
 # Extract the waves of stage
 
 def extract_waves_stage(name_file):
@@ -353,6 +354,8 @@ def plot_waves_comparison(name_file, name_file_2, name_file_3 ):
 #data_complete = dict_of_features(clear_dat)
 #import numpy as np
 #np.save('data_complete_dict.npy',data_complete)
+
+plot_waves('narco2.txt')
 """
 #set_location = ['EOG', 'O2-A1', 'EEG-F7-T3', 'EOG-Left', 'EEG-O2-A1', 'EEG-P3-O1', 'C4-A1', 'EEG-P3-C4', 'EEG-C4-A1', 'EEG-P4-Fp1', 'EEG-T3-T5', 'EMG1-EMG2', 'ECG1-ECG2', 'C3-A2', 'LOC-A2', 'EEG-C4-P4', 'EEG-C3-A2', 'EEG-T4-Fp2', 'EOG-Left-A2', 'EEG-Fp2-F4', 'EEG-C3-O1', 'EOG-Right-A1', 'EEG-T4-T6', 'ROC-LOC', 'EEG-F4-C4', 'LOC-A1', 'ROC-A2', 'EEG-C3-P3', 'EEG-F3-C3', 'CHIN1', 'EEG-F3-A2', 'EEG-F2-F4', 'EEG-C4-F8', 'EEG-F8-O2', 'EEG-P4-O2', 'EEG-Fp1-F3', 'EEG-F3-P3', 'EEG-F1-F3', 'EKG-H-R', 'EEG-Fp2-C3', 'EEG-F8-T4', 'EEG-Fp1-T6']
 
