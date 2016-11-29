@@ -48,11 +48,11 @@ def read_test_DB():
     data_complete_test = dict_of_features(clear_dat)
 
 
-#clear_dat = clear_test_data_into_list(get_test_data())
-#data_complete = dict_of_features(clear_dat)
+clear_dat = clear_test_data_into_list(get_test_data())
+data_complete = dict_of_features(clear_dat)
 import numpy as np
-# np.save('data_test_dict.npy',data_complete)
+np.save('data_test_dict.npy',data_complete)
 
-data_complete_test = np.load('data_test_dict.npy').item()
-
-plot_waves(data_complete_test.keys()[0])
+#data_complete_test = np.load('data_test_dict.npy').item()
+#
+# plot_waves(data_complete_test.keys()[0])
