@@ -95,7 +95,7 @@ def clean_data():
         tmp_dict_ROC_LOC[roc] = [tmp_time, tmp_stages]
         if len(waves_[0]) < min_wave:
             min_wave = len(waves_[0])
-    return tmp_dict_ROC_LOC, min_wave
+    return tmp_dict_ROC_LOC, 300
 
 
 from sklearn import preprocessing
@@ -113,7 +113,7 @@ def transform_data_fourier():
             label = labels_EEG[items[0]]
         fourier_transform_data = fourier_transform(dict_tmp_ROC_LOC[tmp_key_ROC][1][:index_min], 11)[1]
 
-        matrix_to_classify_ROC_data.append(fourier_transform_data)
+        matrix_to_classify_ROC_data.append(np.array(fourier_transform_data).real)
         matrix_to_classify_ROC_label.append(label)
 
     # normalizer = preprocessing.Normalizer().fit(matrix_to_classify_ROC_data)
@@ -121,23 +121,57 @@ def transform_data_fourier():
     return matrix_to_classify_ROC_data, matrix_to_classify_ROC_label # , normalizer
 
 
+#########################################################
+# Load classifiers
+#########################################################
+
+import cPickle
+with open('AdaBoost_kernel_classifier.pkl', 'rb') as fid:
+    clf_kernel_AdaBoost = cPickle.load(fid)
+
+with open('SVM_kernel_classifier.pkl', 'rb') as fid:
+    clf_kernel_SVM = cPickle.load(fid)
+
+with open('RandomForest_kernel_classifier.pkl', 'rb') as fid:
+    clf_kernel_Forest = cPickle.load(fid)
+
+with open('AdaBoost_fourier_classifier.pkl', 'rb') as fid:
+    clf_fourier_AdaBoost = cPickle.load(fid)
+
+with open('SVM_fourier_classifier.pkl', 'rb') as fid:
+    clf_fourier_SVM = cPickle.load(fid)
+
+with open('RandomForest_fourier_classifier.pkl', 'rb') as fid:
+    clf_fourier_Forest = cPickle.load(fid)
+
+
+
 #################################################################
 # Make classification using kernels and normalization.
 #################################################################
 from sklearn import svm, cross_validation
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+from sklearn.linear_model import SGDClassifier
 
-X, y, normalizer_function = transform_data(kernel_triweight)
+X_kernel, y_kernel, normalizer_function = transform_data(kernel_triweight)
+X_fourier, y_fourier = transform_data_fourier()
 
-clf_kernel_AdaBoost = AdaBoostClassifier(n_estimators=50)
-clf_kernel_SVM = svm.SVC(kernel='linear', C=1)
-clf_kernel_Forest = RandomForestClassifier(n_estimators=50)
+# print X_kernel
+
+print "Predicted using kernel: ", clf_kernel_Forest.predict(X_kernel)
+print "Predicted using fourier: ", clf_fourier_Forest.predict(X_fourier)
+print
+print "Real class: ", y_fourier
+#clf_kernel_AdaBoost = AdaBoostClassifier(n_estimators=50).fit(X_kernel, y_kernel)
+#clf_kernel_SVM = svm.SVC(kernel='linear', C=1).fit(X_kernel, y_kernel)
+#clf_kernel_Forest = RandomForestClassifier(n_estimators=50).fit(X_kernel, y_kernel)
 
 # Score using crossvalidation
-print "Score using AdaBoost kernel: ", np.mean(cross_validation.cross_val_score(clf_kernel_AdaBoost, X, y, cv=10))
-print "Score using SVM kernel: ", np.mean(cross_validation.cross_val_score(clf_kernel_SVM, X, y, cv=10))
-print "Score using Random Forest kernel: ", np.mean(cross_validation.cross_val_score(clf_kernel_Forest, X, y, cv=10))
-print
+# print "Score using AdaBoost kernel: ", np.mean(cross_validation.cross_val_score(clf_kernel_AdaBoost, X, y, cv=10))
+# print "Score using SVM kernel: ", np.mean(cross_validation.cross_val_score(clf_kernel_SVM, X, y, cv=10))
+# print "Score using Random Forest kernel: ", np.mean(cross_validation.cross_val_score(clf_kernel_Forest, X, y, cv=10))
+# print
+
 
 #################################################################
 # Make classification using kernels..
@@ -145,14 +179,35 @@ print
 from sklearn import svm, cross_validation
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 
-X, y = transform_data_fourier()
+#clf_fourier_AdaBoost = AdaBoostClassifier(n_estimators=50).fit(X_fourier, y_fourier)
+#clf_fourier_SVM = svm.SVC(kernel='linear', C=0.5).fit(X_fourier, y_fourier)
+#clf_fourier_Forest = RandomForestClassifier(n_estimators=50).fit(X_fourier, y_fourier)
 
-clf_fourier_AdaBoost = AdaBoostClassifier(n_estimators=50)
-clf_fourier_SVM = svm.SVC(kernel='linear', C=0.5)
-clf_fourier_Forest = RandomForestClassifier(n_estimators=50)
+# print "Score using AdaBoost fourier: ", np.mean(cross_validation.cross_val_score(clf_fourier_AdaBoost, X, y, cv=10))
+# print "Score using SVM fourier: ", np.mean(cross_validation.cross_val_score(clf_fourier_SVM, X, y, cv=10))
+# print "Score using Random Forest fourier: ",np.mean(cross_validation.cross_val_score(clf_fourier_Forest, X, y, cv=10))
 
-print "Score using AdaBoost fourier: ", np.mean(cross_validation.cross_val_score(clf_fourier_AdaBoost, X, y, cv=10))
-print "Score using SVM fourier: ", np.mean(cross_validation.cross_val_score(clf_fourier_SVM, X, y, cv=10))
-print "Score using Random Forest fourier: ",np.mean(cross_validation.cross_val_score(clf_fourier_Forest, X, y, cv=10))
+#########################################################
+# Save classifiers
+#########################################################
+"""
+import cPickle
+with open('AdaBoost_kernel_classifier.pkl', 'wb') as fid:
+    cPickle.dump(clf_kernel_AdaBoost, fid)
 
+with open('SVM_kernel_classifier.pkl', 'wb') as fid:
+    cPickle.dump(clf_kernel_SVM, fid)
+
+with open('RandomForest_kernel_classifier.pkl', 'wb') as fid:
+    cPickle.dump(clf_kernel_Forest, fid)
+
+with open('AdaBoost_fourier_classifier.pkl', 'wb') as fid:
+    cPickle.dump(clf_fourier_AdaBoost, fid)
+
+with open('SVM_fourier_classifier.pkl', 'wb') as fid:
+    cPickle.dump(clf_fourier_SVM, fid)
+
+with open('RandomForest_fourier_classifier.pkl', 'wb') as fid:
+    cPickle.dump(clf_fourier_Forest, fid)
+"""
 

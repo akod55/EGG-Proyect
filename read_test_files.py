@@ -41,12 +41,18 @@ def clear_test_data_into_list(all_data):
 
     return clear_data
 
+def read_test_DB():
+    global data_complete_test
+    # Saving each file in a dict. key =  nameFile, value = alldata
+    clear_dat = clear_test_data_into_list(get_test_data())
+    data_complete_test = dict_of_features(clear_dat)
+
 
 #clear_dat = clear_test_data_into_list(get_test_data())
 #data_complete = dict_of_features(clear_dat)
 import numpy as np
 # np.save('data_test_dict.npy',data_complete)
 
-data_complete = np.load('data_test_dict.npy').item()
+data_complete_test = np.load('data_test_dict.npy').item()
 
-plot_waves(data_complete.keys()[0])
+plot_waves(data_complete_test.keys()[0])
