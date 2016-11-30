@@ -1,7 +1,15 @@
-import sys
-from PyQt4.QtCore import *
+import sys, time
+from PyQt4 import QtCore
 from PyQt4.QtGui import *
-from read_files import all_data_file
+
+from classification_one_per_one import classification_one_per_one, labels_EEG
+from read_files import all_data_file, read_DB, plot_waves_comparison
+from read_test_files import all_data_file_test
+
+
+labels_EEG_name = {'narco':'NARCOLEPSIA', 'ins':'INSOMNIO', 'n':'SUJETO DE CONTROL', 'nfle':'EPILEPSIA NOCTURNA',
+                   'plm':'MOVIMIENTOS PERIODICOS DE LAS PIERNAS', 'rbd':'TRANS. DEL COMPORTAMIENTO REM',
+                   'sdb':'TRANS. RESPIRATORIO REM'}
 
 
 class tab(QTabWidget):
@@ -20,15 +28,12 @@ class tab(QTabWidget):
         self.tab2UI()
         self.setWindowTitle("Clasificacion patologica con EEG en el CAP")
 
-    def tab1UI(self):
+    def tab2UI(self):
         layout = QFormLayout()
         h1 = QHBoxLayout()
         button1 = QPushButton("Leer Base de Datos", self)
         button1.clicked.connect(lambda: self.start())
         h1.addWidget(button1)
-        h2 = QHBoxLayout()
-        progress = QProgressBar()
-        h2.addWidget(progress)
         h3 = QHBoxLayout()
         box1 = QComboBox()
         box2 = QComboBox()
@@ -45,16 +50,14 @@ class tab(QTabWidget):
         button2.clicked.connect(lambda: self.plot(box1, box2, box3))
         h4.addWidget(button2)
         layout.addRow(h1)
-        layout.addRow(h2)
         layout.addRow(QLabel("Seleccione los sujetos a comparar"))
         layout.addRow(h3)
         layout.addRow(h4)
-        self.setTabText(0, "Graficar")
-        self.tab1.setLayout(layout)
+        self.setTabText(1, "Graficar")
+        self.tab2.setLayout(layout)
 
 
-
-    def tab2UI(self):
+    def tab1UI(self):
         layout = QFormLayout()
         v1 = QVBoxLayout()
         b1=QRadioButton("Adaboost usando kernels")
@@ -72,19 +75,32 @@ class tab(QTabWidget):
         h2 = QHBoxLayout()
         boxy = QComboBox()
         h2.addWidget(boxy)
-        for index in all_data_file:
+        for index in all_data_file_test:
             boxy.addItem(index)
         h3 = QHBoxLayout()
         button = QPushButton("Clasificar")
-        button.clicked.connect(lambda: self.clasificar(boxy,b1,b2,b3,b4,b5,b6))
+        out1 = QLineEdit()
+        out2 = QLineEdit()
+        button.clicked.connect(lambda: self.clasificar(boxy,b1,b2,b3,b4,b5,b6,out1,out2))
         h3.addWidget(button)
+        h4 = QHBoxLayout()
+        #out1=QLineEdit(self.name_real_class)
+        h4.addWidget(QLabel("La clase real es: "))
+        h4.addWidget(out1)
+        h5 = QHBoxLayout()
+        #out2 = QLineEdit(self.name_ppredict_class)
+        h5.addWidget(QLabel("La clase prediccion es: "))
+        h5.addWidget(out2)
         layout.addRow(QLabel("Seleccione el Clasificador"), v1)
         layout.addRow(h2)
         layout.addRow(h3)
-        self.setTabText(1, "Clasificar")
-        self.tab2.setLayout(layout)
+        layout.addRow(h4)
+        layout.addRow(h5)
 
-    def clasificar(self,s1,b1,b2,b3,b4,b5,b6):
+        self.setTabText(0, "Clasificar")
+        self.tab1.setLayout(layout)
+
+    def clasificar(self,s1,b1,b2,b3,b4,b5,b6,out1,out2):
         b=0
         self.subject = str(s1.currentText())
         if b1.isChecked()== True:
@@ -96,32 +112,28 @@ class tab(QTabWidget):
         if b4.isChecked()== True:
             b=4
         if b5.isChecked()== True:
-            b=6
+            b=5
         if b6.isChecked()== True:
             b=6
-        #funcionqueejecutaclasificador(b,self.subject)
-        print "se calsificara el sujeto"
-        print self.subject
-        print "con el clasificador"
-        print b
-        print "--------"
+        pred, real_label = classification_one_per_one(b,self.subject )
+        real_string_label = labels_EEG.keys()[labels_EEG.values().index(real_label[0])]
+        predict_string_label = labels_EEG.keys()[labels_EEG.values().index(pred[0])]
+        out1.setText(labels_EEG_name[real_string_label])
+        out2.setText(labels_EEG_name[predict_string_label])
 
     def plot(self,s1,s2,s3):
         self.subject1 = str(s1.currentText())
         self.subject2 = str(s2.currentText())
         self.subject3 = str(s3.currentText())
-        #plot_waves_comparison(self.subject1,self.subject2,self.subject3)
+        plot_waves_comparison(self.subject1,self.subject2,self.subject3)
         print "graficas generadas"
         print self.subject1
         print self.subject2
         print self.subject3
         print "--------"
     def start(self):
-        #read_DB()
+        read_DB()
         print "base de datos leida"
-
-
-
 
 def main():
     app = QApplication(sys.argv)

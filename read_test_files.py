@@ -1,8 +1,8 @@
 # Data files in a directory (next(os.walk("path"))[2])
-from read_files import dict_of_features, plot_waves
+from read_files import plot_waves
 import os
 
-all_data_file = next(os.walk("/home/japrietov/Universidad/TeoriaInformacion/EEG_project/EGG-Proyect/TestBaseTXT"))[2]
+all_data_file_test = next(os.walk("/home/akosoriod/Documentos/Python/EGG-Proyect/TestBaseTXT"))[2]
 #all_data_file = next(os.walk("C:\Users\Usuario\Documents\Python\EGG-Proyect\DataBaseTXT"))[2]
 #globlas
 heads = ['Sleep Stage', 'Time [hh:mm:ss]', 'Event', 'Duration[s]', 'Location']
@@ -13,9 +13,9 @@ events = ['SLEEP-S3', 'SLEEP-S2', 'SLEEP-S1', 'SLEEP-S0', 'SLEEP-S4', 'SLEEP-REM
 
 def get_test_data():
     all_data = {}
-    for i in all_data_file:
+    for i in all_data_file_test:
         #tmp = open("C:\Users\Usuario\Documents\Python\EGG-Proyect\DataBaseTXT/" + i).readlines()
-        tmp = open("/home/japrietov/Universidad/TeoriaInformacion/EEG_project/EGG-Proyect/TestBaseTXT/" + i).readlines()
+        tmp = open("/home/akosoriod/Documentos/Python/EGG-Proyect/TestBaseTXT/" + i).readlines()
         for line in xrange(len(tmp)):
             if "Sleep Stage" in tmp[line]:
                 all_data[i] = tmp[line:]
@@ -40,19 +40,3 @@ def clear_test_data_into_list(all_data):
         clear_data[dat] = data_list
 
     return clear_data
-
-def read_test_DB():
-    global data_complete_test
-    # Saving each file in a dict. key =  nameFile, value = alldata
-    clear_dat = clear_test_data_into_list(get_test_data())
-    data_complete_test = dict_of_features(clear_dat)
-
-
-clear_dat = clear_test_data_into_list(get_test_data())
-data_complete = dict_of_features(clear_dat)
-import numpy as np
-np.save('data_test_dict.npy',data_complete)
-
-#data_complete_test = np.load('data_test_dict.npy').item()
-#
-# plot_waves(data_complete_test.keys()[0])

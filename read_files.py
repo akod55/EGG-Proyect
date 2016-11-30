@@ -5,11 +5,10 @@ from matplotlib.pyplot import locator_params
 import numpy as np
 
 # LOAD DATA COMPLETE
-data_complete = np.load('data_complete_dict.npy').item()
+data_complete_dict = np.load('data_complete_dict.npy').item()
 
 # Data files in a directory (next(os.walk("path"))[2])
-all_data_file = next(os.walk("/home/japrietov/Universidad/TeoriaInformacion/EEG_project/EGG-Proyect/DataBaseTXT"))[2]
-#all_data_file = next(os.walk("C:\Users\Usuario\Documents\Python\EGG-Proyect\DataBaseTXT"))[2]
+all_data_file = next(os.walk("/home/akosoriod/Documentos/Python/EGG-Proyect/DataBaseTXT"))[2]
 #globlas
 heads = ['Sleep Stage', 'Time [hh:mm:ss]', 'Event', 'Duration[s]', 'Location']
 # stages
@@ -20,8 +19,7 @@ events = ['SLEEP-S3', 'SLEEP-S2', 'SLEEP-S1', 'SLEEP-S0', 'SLEEP-S4', 'SLEEP-REM
 def get_all_data():
     all_data = {}
     for i in all_data_file:
-        #tmp = open("C:\Users\Usuario\Documents\Python\EGG-Proyect\DataBaseTXT/" + i).readlines()
-        tmp = open("/home/japrietov/Universidad/TeoriaInformacion/EEG_project/EGG-Proyect/DataBaseTXT/" + i).readlines()
+        tmp = open("/home/akosoriod/Documentos/Python/EGG-Proyect/DataBaseTXT/" + i).readlines()
         for line in xrange(len(tmp)):
             if "Sleep Stage" in tmp[line]:
                 all_data[i] = tmp[line:]
@@ -92,15 +90,16 @@ def dict_of_features(clear_data):
 def read_DB():
     global data_complete
     # Saving each file in a dict. key =  nameFile, value = alldata
-    clear_dat = clear_data_into_list(get_all_data())
-    data_complete = dict_of_features(clear_dat)
+    # clear_dat = clear_data_into_list(get_all_data())
+    #data_complete = dict_of_features(clear_dat)
+    data_complete = data_complete_dict
 
 # Extract the waves of stage
 
 def extract_waves_stage(name_file):
 
     # posible locations of the diode
-    posible_locations = list(set(data_complete[name_file]['Location']))
+    posible_locations = list(set(data_complete_dict[name_file]['Location']))
 
     # Empty list of each location
     waves_dict = {}
@@ -108,8 +107,8 @@ def extract_waves_stage(name_file):
         waves_dict[loc] = []
 
     # Add all possibles stages and his respective time
-    for i in xrange(len(data_complete[name_file]['Location'])):
-        waves_dict[data_complete[name_file]['Location'][i]].append((i, data_complete[name_file]['Sleep Stage'][i]))
+    for i in xrange(len(data_complete_dict[name_file]['Location'])):
+        waves_dict[data_complete_dict[name_file]['Location'][i]].append((i, data_complete_dict[name_file]['Sleep Stage'][i]))
 
     # Convert the tuples (time, stages) into list of [[times], [stages]]
     for key in waves_dict:
@@ -121,15 +120,15 @@ def extract_waves_stage(name_file):
 def extract_waves_event(name_file):
 
     # posible locations of the diode
-    possible_locations = list(set(data_complete[name_file]['Location']))
+    possible_locations = list(set(data_complete_dict[name_file]['Location']))
 
     # Empty list of each location
     waves_dict = {}
     for loc in possible_locations:
         waves_dict[loc] = []
     # Add all possibles event and his respective time
-    for i in xrange(len(data_complete[name_file]['Location'])):
-        waves_dict[data_complete[name_file]['Location'][i]].append((i, data_complete[name_file]['Event'][i]))
+    for i in xrange(len(data_complete_dict[name_file]['Location'])):
+        waves_dict[data_complete_dict[name_file]['Location'][i]].append((i, data_complete_dict[name_file]['Event'][i]))
 
     # Convert the tuples (time, event) into list of [[times], [events]]
     for key in waves_dict:
@@ -145,7 +144,7 @@ def plot_waves(name_file):
     plot_waves_event = extract_waves_event(name_file)
 
     # Extract the respective time, and make this as Xlabel (22:00:00)
-    tm = data_complete[name_file]['Time [hh:mm:ss]']
+    tm = data_complete_dict[name_file]['Time [hh:mm:ss]']
     labels_hour = [(str(k.hour) + ":" + str(k.minute) + ":" + str(k.second)) for k in tm]
     tmp_plot = [labels_hour[o] for o in xrange(len(labels_hour)) if o%(len(labels_hour)/20) == 0]
     labels_1 = tmp_plot + labels_hour[20:]
@@ -294,17 +293,17 @@ def plot_waves_comparison(name_file, name_file_2, name_file_3 ):
 
 
     # Extract the respective time, and make this as Xlabel (22:00:00)
-    tm = data_complete[name_file]['Time [hh:mm:ss]']
+    tm = data_complete_dict[name_file]['Time [hh:mm:ss]']
     labels_hour = [(str(k.hour) + ":" + str(k.minute) + ":" + str(k.second)) for k in tm]
     tmp_plot = [labels_hour[o] for o in xrange(len(labels_hour)) if o % (len(labels_hour) / 20) == 0]
     labels_1 = tmp_plot + labels_hour[20:]
 
-    tm2 = data_complete[name_file_2]['Time [hh:mm:ss]']
+    tm2 = data_complete_dict[name_file_2]['Time [hh:mm:ss]']
     labels_hour2 = [(str(k.hour) + ":" + str(k.minute) + ":" + str(k.second)) for k in tm2]
     tmp_plot2 = [labels_hour2[o] for o in xrange(len(labels_hour2)) if o % (len(labels_hour2) / 20) == 0]
     labels_2 = tmp_plot2 + labels_hour2[20:]
 
-    tm3 = data_complete[name_file_3]['Time [hh:mm:ss]']
+    tm3 = data_complete_dict[name_file_3]['Time [hh:mm:ss]']
     labels_hour3 = [(str(k.hour) + ":" + str(k.minute) + ":" + str(k.second)) for k in tm3]
     tmp_plot3 = [labels_hour3[o] for o in xrange(len(labels_hour3)) if o % (len(labels_hour3) / 20) == 0]
     labels_3 = tmp_plot3 + labels_hour3[20:]
