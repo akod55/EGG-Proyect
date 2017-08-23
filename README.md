@@ -1,2 +1,2 @@
 # EGG-Proyect
-Reading and signals EEG of DataBase
+Read and show signals EEG of DataBase
