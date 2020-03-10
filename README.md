@@ -1,2 +1,2 @@
 # EGG-Proyect
-Read and show signals EEG of DataBase
+IA algorithms for EEG signals 
